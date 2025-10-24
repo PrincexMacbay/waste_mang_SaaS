@@ -1,0 +1,10 @@
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+.md filter=lfs diff=lfs merge=lfs -text
+.dbml filter=lfs diff=lfs merge=lfs -text
+.ts filter=lfs diff=lfs merge=lfs -text
+.py filter=lfs diff=lfs merge=lfs -text
+.css filter=lfs diff=lfs merge=lfs -text
+.tsx filter=lfs diff=lfs merge=lfs -text
