@@ -1,0 +1,284 @@
+// =====================================================
+// WASTE MANAGEMENT SAAS PLATFORM - DATABASE SCHEMA
+// DBML (Database Markup Language) for dbdiagram.io
+// =====================================================
+
+// Core Organization & Tenancy Tables
+Table organizations {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  name varchar(255) [not null]
+  slug varchar(100) [unique, not null]
+  phone varchar(20)
+  email varchar(255)
+  address text
+  website varchar(255)
+  
+  // Branding & Customization
+  logo_url varchar(500)
+  primary_color varchar(7) [default: '#2563eb']
+  secondary_color varchar(7) [default: '#1e40af']
+  font_family varchar(50) [default: 'Inter']
+  
+  // Features & Settings
+  enabled_features jsonb [default: '{}']
+  dashboard_layout jsonb [default: '{}']
+  
+  // Status & Metadata
+  status varchar(20) [default: 'active']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table subscription_tiers {
+  id serial [pk]
+  name varchar(100) [not null]
+  description text
+  price decimal(10,2) [not null]
+  billing_cycle varchar(20) [not null]
+  
+  // Limits
+  max_customers integer [default: 100]
+  max_managers integer [default: 2]
+  max_zones integer [default: 5]
+  
+  // Features
+  features jsonb [default: '[]']
+  
+  // Status
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table subscriptions {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id]
+  tier_id integer [ref: > subscription_tiers.id]
+  
+  // Subscription Details
+  status varchar(20) [default: 'trial']
+  trial_start_date timestamp
+  trial_end_date timestamp
+  billing_start_date timestamp
+  billing_end_date timestamp
+  
+  // Billing
+  next_billing_date timestamp
+  auto_renew boolean [default: true]
+  
+  // Metadata
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// User Management Tables
+Table users {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id]
+  
+  // Basic Info
+  email varchar(255) [unique, not null]
+  password_hash varchar(255) [not null]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  phone varchar(20)
+  
+  // Role & Permissions
+  role varchar(20) [not null]
+  permissions jsonb [default: '{}']
+  
+  // Status & Security
+  is_active boolean [default: true]
+  email_verified boolean [default: false]
+  last_login timestamp
+  created_by varchar(36) [ref: > users.id]
+  
+  // Metadata
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Zone & Territory Management
+Table zones {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  name varchar(100) [not null]
+  description text
+  
+  // Geographic Info
+  area_polygon jsonb
+  center_lat decimal(10, 8)
+  center_lng decimal(11, 8)
+  
+  // Manager Assignment
+  regional_manager_id varchar(36) [ref: > users.id]
+  
+  // Status
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Customer & Service Management
+Table customers {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  zone_id varchar(36) [ref: > zones.id]
+  
+  // Basic Info
+  email varchar(255) [not null]
+  password_hash varchar(255) [not null]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  phone varchar(20) [not null]
+  
+  // Address Info
+  address text [not null]
+  house_type varchar(50)
+  number_of_flats integer [default: 1]
+  number_of_occupants integer [default: 1]
+  
+  // Service Info
+  monthly_fee decimal(10,2) [not null]
+  pickup_frequency varchar(20) [default: 'weekly']
+  service_start_date date
+  service_end_date date
+  
+  // Status
+  status varchar(20) [default: 'active']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Pickup & Service Management
+Table pickups {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  customer_id varchar(36) [ref: > customers.id, not null]
+  zone_id varchar(36) [ref: > zones.id]
+  
+  // Schedule Info
+  scheduled_date date [not null]
+  scheduled_time time [not null]
+  pickup_type varchar(20) [default: 'regular']
+  
+  // Status & Tracking
+  status varchar(20) [default: 'scheduled']
+  actual_pickup_time timestamp
+  notes text
+  
+  // Metadata
+  created_by varchar(36) [ref: > users.id]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Payment & Billing Management
+Table invoices {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  customer_id varchar(36) [ref: > customers.id]
+  
+  // Invoice Details
+  invoice_number varchar(50) [unique, not null]
+  amount decimal(10,2) [not null]
+  currency varchar(3) [default: 'NGN']
+  description text
+  
+  // Dates
+  issue_date date [not null]
+  due_date date [not null]
+  paid_date date
+  
+  // Status
+  status varchar(20) [default: 'pending']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table payments {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  customer_id varchar(36) [ref: > customers.id]
+  invoice_id varchar(36) [ref: > invoices.id]
+  
+  // Payment Details
+  amount decimal(10,2) [not null]
+  currency varchar(3) [default: 'NGN']
+  payment_method varchar(50) [not null]
+  payment_reference varchar(100)
+  
+  // Status
+  status varchar(20) [default: 'pending']
+  processed_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Communication & Notifications
+Table notifications {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  user_id varchar(36) [ref: > users.id]
+  customer_id varchar(36) [ref: > customers.id]
+  
+  // Notification Details
+  title varchar(255) [not null]
+  message text [not null]
+  type varchar(50) [not null]
+  priority varchar(20) [default: 'normal']
+  
+  // Status
+  is_read boolean [default: false]
+  read_at timestamp
+  
+  // Metadata
+  created_at timestamp [default: `now()`]
+}
+
+// Audit & Compliance
+Table audit_logs {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  user_id varchar(36) [ref: > users.id]
+  
+  // Action Details
+  action varchar(100) [not null]
+  resource_type varchar(50) [not null]
+  resource_id varchar(36)
+  old_values jsonb
+  new_values jsonb
+  
+  // Context
+  ip_address inet
+  user_agent text
+  
+  // Metadata
+  created_at timestamp [default: `now()`]
+}
+
+// Complaints & Support
+Table complaints {
+  id varchar(36) [pk, default: `uuid_generate_v4()`]
+  organization_id varchar(36) [ref: > organizations.id, not null]
+  customer_id varchar(36) [ref: > customers.id, not null]
+  zone_id varchar(36) [ref: > zones.id]
+  
+  // Complaint Details
+  subject varchar(255) [not null]
+  description text [not null]
+  category varchar(50) [not null]
+  priority varchar(20) [default: 'medium']
+  
+  // Status
+  status varchar(20) [default: 'open']
+  resolution text
+  
+  // Assignment
+  assigned_to varchar(36) [ref: > users.id]
+  
+  // Metadata
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  resolved_at timestamp
+}

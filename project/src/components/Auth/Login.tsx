@@ -4,7 +4,7 @@ import { ArrowLeft, Mail, Phone, Eye, EyeOff, Lock } from 'lucide-react';
 interface LoginProps {
   onBack: () => void;
   onRegisterClick: () => void;
-  onLoginSuccess: (userType: 'admin' | 'customer') => void;
+  onLoginSuccess: (userType: 'admin' | 'customer' | 'business_manager' | 'regional_manager') => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onBack, onRegisterClick, onLoginSuccess }) => {
@@ -24,10 +24,14 @@ const Login: React.FC<LoginProps> = ({ onBack, onRegisterClick, onLoginSuccess }
     // Demo login logic
     if (formData.identifier === 'admin@mcbay.com' && formData.password === 'admin123') {
       onLoginSuccess('admin');
+    } else if (formData.identifier === 'business@mcbay.com' && formData.password === 'business123') {
+      onLoginSuccess('business_manager');
+    } else if (formData.identifier === 'regional@mcbay.com' && formData.password === 'regional123') {
+      onLoginSuccess('regional_manager');
     } else if (formData.identifier && formData.password) {
       onLoginSuccess('customer');
     } else {
-      alert('Invalid credentials. Try admin@mcbay.com / admin123 for admin access.');
+      alert('Invalid credentials. Try:\n- admin@mcbay.com / admin123 (Admin)\n- business@mcbay.com / business123 (Business Manager)\n- regional@mcbay.com / regional123 (Regional Manager)');
     }
   };
 

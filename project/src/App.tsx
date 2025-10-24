@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
-import Header from './components/Layout/Header';
-import Hero from './components/Home/Hero';
-import Services from './components/Home/Services';
-import Contact from './components/Home/Contact';
+import Header from './components/RegionalManager/Layout/Header';
+import Hero from './components/RegionalManager/Home/Hero';
+import Services from './components/RegionalManager/Home/Services';
+import Contact from './components/RegionalManager/Home/Contact';
 import Register from './components/Auth/Register';
 import Login from './components/Auth/Login';
-import AdminDashboard from './components/Dashboard/AdminDashboard';
-import CustomerDashboard from './components/Dashboard/CustomerDashboard';
+import SuperAdminDashboard from './components/SaaS/SuperAdminDashboard';
+import RegionalManagerWebsite from './components/RegionalManager/RegionalManagerWebsite';
+import RegionalManagerDashboard from './components/RegionalManager/RegionalManagerDashboard';
+import BusinessManagerDashboard from './components/BusinessManager/BusinessManagerDashboard';
+import LandingPage from './components/SaaS/LandingPage';
+import { OrganizationProvider } from './context/OrganizationContext';
 
-type AppState = 'home' | 'register' | 'login' | 'admin-dashboard' | 'customer-dashboard';
-type UserType = 'admin' | 'customer' | null;
+type AppState = 'home' | 'register' | 'login' | 'super-admin-dashboard' | 'regional-manager-website' | 'regional-manager-dashboard' | 'business-manager-dashboard' | 'saas-landing';
+type UserType = 'super_admin' | 'customer' | 'business_manager' | 'regional_manager' | null;
 
 function App() {
   const [currentView, setCurrentView] = useState<AppState>('home');
@@ -38,11 +42,19 @@ function App() {
 
   const handleLoginSuccess = (type: UserType) => {
     setUserType(type);
-    if (type === 'admin') {
-      setCurrentView('admin-dashboard');
-    } else {
-      setCurrentView('customer-dashboard');
+    if (type === 'super_admin') {
+      setCurrentView('super-admin-dashboard');
+    } else if (type === 'customer') {
+      setCurrentView('regional-manager-website');
+    } else if (type === 'business_manager') {
+      setCurrentView('business-manager-dashboard');
+    } else if (type === 'regional_manager') {
+      setCurrentView('regional-manager-dashboard');
     }
+  };
+
+  const handleNavigateToSaaS = () => {
+    setCurrentView('saas-landing');
   };
 
   const handleLogout = () => {
@@ -74,18 +86,42 @@ function App() {
     );
   }
 
-  if (currentView === 'admin-dashboard') {
+  if (currentView === 'super-admin-dashboard') {
     return (
       <Router>
-        <AdminDashboard onLogout={handleLogout} />
+        <SuperAdminDashboard onLogout={handleLogout} />
       </Router>
     );
   }
 
-  if (currentView === 'customer-dashboard') {
+  if (currentView === 'regional-manager-website') {
     return (
       <Router>
-        <CustomerDashboard onLogout={handleLogout} />
+        <RegionalManagerWebsite />
+      </Router>
+    );
+  }
+
+  if (currentView === 'business-manager-dashboard') {
+    return (
+      <Router>
+        <BusinessManagerDashboard onLogout={handleLogout} />
+      </Router>
+    );
+  }
+
+  if (currentView === 'regional-manager-dashboard') {
+    return (
+      <Router>
+        <RegionalManagerDashboard onLogout={handleLogout} />
+      </Router>
+    );
+  }
+
+  if (currentView === 'saas-landing') {
+    return (
+      <Router>
+        <LandingPage />
       </Router>
     );
   }
